@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   // CUSTOMER | CRM | INSTALLATION | ACTIVATION
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model ServiceArea {
+  id       String  @id @default(cuid())
+  state    String
+  city     String
+  area     String
+  pincode  String
+  lat      Float   @default(0)
+  lng      Float   @default(0)
+  isActive Boolean @default(true)
+  orders   Order[]
+
+  @@unique([city, area, pincode])
+}
+
+model Plan {
+  id          String  @id @default(cuid())
+  name        String  // Entertainment, WiFi+Phone, WiFi+Entertainment, All-in-One
+  speed       String  // 100 Mbps, 200 Mbps, 500 Mbps, 1 Gbps
+  price       Float
+  description String
+  features    String  // JSON string of features array
+  isActive    Boolean @default(true)
+  orders      Order[]
+}
+
+model Offer {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  discount    Float   // percentage or flat amount
+  discountType String // PERCENTAGE | FLAT
+  isActive    Boolean @default(true)
+  orders      Order[]
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  orderNumber     String   @unique
+  
+  // Customer Info (Tab 1)
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  customerAddress String
+  
+  // Location (Tab 2)
+  serviceAreaId   String
+  serviceArea     ServiceArea @relation(fields: [serviceAreaId], references: [id])
+  installAddress  String
+  
+  // Plan (Tab 3)
+  planId          String
+  plan            Plan     @relation(fields: [planId], references: [id])
+  
+  // Offer (Tab 4)
+  offerId         String?
+  offer           Offer?   @relation(fields: [offerId], references: [id])
+  
+  // Pricing
+  basePrice       Float
+  discountAmount  Float    @default(0)
+  finalPrice      Float
+  
+  // Order Status - flows through apps
+  status          String   @default("SUBMITTED") 
+  // SUBMITTED -> CRM_REVIEW -> CRM_APPROVED -> INSTALLATION_SCHEDULED -> INSTALLATION_COMPLETE -> ACTIVATION_PENDING -> ACTIVATED -> COMPLETED
+  
+  // Scheduling
+  installDate     String?
+  installSlot     String?  // MORNING | AFTERNOON | EVENING
+  
+  // Activation
+  connectionId    String?
+  activatedAt     DateTime?
+  
+  // Metadata
+  notes           String?
+  expectedDate    String?
+  createdById     String
+  createdBy       User     @relation(fields: [createdById], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
