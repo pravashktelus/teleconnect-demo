@@ -210,7 +210,8 @@ export default function OrderWizard() {
     switch (step) {
       case 1:
         if (!customerName.trim()) {
-          errors.customerName = "Full name is required";
+          // ORIGINAL: "Full name is required"
+          errors.customerName = "Customer full name is mandatory";
         } else if (customerName.trim().length < 3) {
           errors.customerName = "Name must be at least 3 characters";
         } else if (customerName.trim().length > 100) {
@@ -227,8 +228,8 @@ export default function OrderWizard() {
 
         if (!customerPhone.trim()) {
           errors.customerPhone = "Phone number is required";
-        } else if (!/^\d{10}$/.test(customerPhone.trim())) {
-          errors.customerPhone = "Phone must be exactly 10 digits";
+        } else if (!/^\d{12}$/.test(customerPhone.trim())) {
+          errors.customerPhone = "Phone must be exactly 12 digits including country code";
         }
 
         if (altPhone.trim() && !/^\d{10}$/.test(altPhone.trim())) {
@@ -520,7 +521,7 @@ export default function OrderWizard() {
                   id="phone"
                   data-testid="input-phone"
                   type="tel"
-                  placeholder="9876543210"
+                  placeholder="919876543210"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   required

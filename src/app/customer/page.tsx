@@ -28,6 +28,9 @@ const statusIcons: Record<string, string> = {
 };
 
 function formatStatus(status: string) {
+  // ORIGINAL: ACTIVATED
+  // Display-only relabel for the customer view; DB value and API stay "ACTIVATED".
+  if (status === "ACTIVATED") return "ACTIVE";
   return status.replace(/_/g, " ");
 }
 
