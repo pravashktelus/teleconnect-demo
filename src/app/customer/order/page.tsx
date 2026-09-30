@@ -210,8 +210,7 @@ export default function OrderWizard() {
     switch (step) {
       case 1:
         if (!customerName.trim()) {
-          // ORIGINAL: "Full name is required"
-          errors.customerName = "Customer full name is mandatory";
+          errors.customerName = "Please enter your full legal name";
         } else if (customerName.trim().length < 3) {
           errors.customerName = "Name must be at least 3 characters";
         } else if (customerName.trim().length > 100) {
@@ -264,8 +263,8 @@ export default function OrderWizard() {
 
         if (!idNumber.trim()) {
           errors.idNumber = "ID number is required";
-        } else if (idType === "Aadhaar" && !/^\d{12}$/.test(idNumber.trim())) {
-          errors.idNumber = "Aadhaar must be exactly 12 digits";
+        } else if (idType === "Aadhaar" && !/^[2-9]\d{11}$/.test(idNumber.trim())) {
+          errors.idNumber = "Aadhaar must be 12 digits and cannot start with 0 or 1";
         } else if (idType === "PAN" && !/^[A-Z]{5}\d{4}[A-Z]$/.test(idNumber.trim().toUpperCase())) {
           errors.idNumber = "PAN format: ABCDE1234F (5 letters, 4 digits, 1 letter)";
         } else if (idType === "Passport" && !/^[A-Z]\d{7}$/.test(idNumber.trim().toUpperCase())) {
