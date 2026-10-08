@@ -28,9 +28,6 @@ const statusIcons: Record<string, string> = {
 };
 
 function formatStatus(status: string) {
-  // ORIGINAL: ACTIVATED
-  // Display-only relabel for the customer view; DB value and API stay "ACTIVATED".
-  if (status === "ACTIVATED") return "ACTIVE";
   return status.replace(/_/g, " ");
 }
 
@@ -67,7 +64,11 @@ export default async function CustomerDashboard() {
             </p>
           </div>
           <Link href="/customer/order">
-            <Button data-testid="btn-new-connection" className="bg-white text-blue-700 hover:bg-blue-50 shadow-lg font-semibold px-6 h-12 text-base">
+            {/* NEW FEATURE refactor: renamed testid + restyled CTA class.
+                data-testid changed btn-new-connection -> btn-create-order and the
+                class updated. Visible text "New Connection" is unchanged, so the
+                framework's self-heal can recover the locator by text/role. */}
+            <Button data-testid="btn-create-order" className="cta-primary bg-white text-indigo-700 hover:bg-indigo-50 shadow-lg font-semibold px-6 h-12 text-base">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
