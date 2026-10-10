@@ -88,7 +88,6 @@ export default function OrderWizard() {
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [customerAddress, setCustomerAddress] = useState("");
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
   const [altPhone, setAltPhone] = useState("");
@@ -244,14 +243,6 @@ export default function OrderWizard() {
           errors.altPhone = "Alternate phone must be different from primary";
         }
 
-        if (!customerAddress.trim()) {
-          errors.customerAddress = "Address is required";
-        } else if (customerAddress.trim().length < 10) {
-          errors.customerAddress = "Address must be at least 10 characters";
-        } else if (customerAddress.trim().length > 300) {
-          errors.customerAddress = "Address must be less than 300 characters";
-        }
-
         if (dob) {
           const dobDate = new Date(dob);
           const today = new Date();
@@ -378,7 +369,6 @@ export default function OrderWizard() {
           customerName,
           customerEmail,
           customerPhone,
-          customerAddress,
           serviceAreaId: selectedAreaId,
           installAddress,
           planId: selectedPlanId,
@@ -560,25 +550,6 @@ export default function OrderWizard() {
                 />
                 {fieldErrors.altPhone && <p data-testid="error-altPhone" className="text-xs text-red-500 mt-1">{fieldErrors.altPhone}</p>}
               </div>
-            </div>
-          </div>
-
-          {/* Address */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Address</h3>
-            <div className="space-y-2">
-              <Label htmlFor="address" className="text-sm font-semibold text-gray-700">Residential Address *</Label>
-              <Textarea
-                id="address"
-                data-testid="input-address"
-                placeholder="Enter your full residential address"
-                value={customerAddress}
-                onChange={(e) => setCustomerAddress(e.target.value)}
-                rows={3}
-                required
-                className={`resize-none ${fieldErrors.customerAddress ? "border-red-400 focus:border-red-500 focus:ring-red-200" : "border-gray-200 focus:border-blue-500 focus:ring-blue-500"}`}
-              />
-              {fieldErrors.customerAddress && <p data-testid="error-customerAddress" className="text-xs text-red-500 mt-1">{fieldErrors.customerAddress}</p>}
             </div>
           </div>
 
@@ -1239,10 +1210,6 @@ export default function OrderWizard() {
               <div>
                 <span className="text-gray-500">ID Number:</span>{" "}
                 <span className="font-medium">{idNumber}</span>
-              </div>
-              <div className="col-span-2">
-                <span className="text-gray-500">Address:</span>{" "}
-                <span className="font-medium">{customerAddress}</span>
               </div>
             </div>
           </div>
