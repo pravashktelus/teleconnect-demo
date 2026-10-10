@@ -23,6 +23,7 @@ import {
   Send,
   Calendar,
   Upload,
+  Shield,
 } from "lucide-react";
 
 const LocationMap = dynamic(
@@ -68,7 +69,9 @@ const steps = [
   { id: 3, label: "Plan", icon: Package },
   { id: 4, label: "Offers", icon: Tag },
   { id: 5, label: "Schedule", icon: Calendar },
-  { id: 6, label: "Confirm", icon: Send },
+  // NEW FEATURE (TCNCT-009): mandatory Consent & Terms step — wizard is now 7 steps.
+  { id: 6, label: "Consent", icon: Shield },
+  { id: 7, label: "Confirm", icon: Send },
 ];
 
 export default function OrderWizard() {
@@ -85,7 +88,6 @@ export default function OrderWizard() {
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [customerAddress, setCustomerAddress] = useState("");
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
   const [altPhone, setAltPhone] = useState("");
@@ -116,6 +118,9 @@ export default function OrderWizard() {
   const [preferredDate, setPreferredDate] = useState("");
   const [preferredSlot, setPreferredSlot] = useState("");
   const [specialInstructions, setSpecialInstructions] = useState("");
+
+  // Step 6 - Consent & Terms (NEW FEATURE TCNCT-009)
+  const [consentGiven, setConsentGiven] = useState(false);
 
   // Fetch service areas
   useEffect(() => {
@@ -210,8 +215,7 @@ export default function OrderWizard() {
     switch (step) {
       case 1:
         if (!customerName.trim()) {
-          // ORIGINAL: "Full name is required"
-          errors.customerName = "Customer full name is mandatory";
+          errors.customerName = "Full name is required";
         } else if (customerName.trim().length < 3) {
           errors.customerName = "Name must be at least 3 characters";
         } else if (customerName.trim().length > 100) {
@@ -228,8 +232,8 @@ export default function OrderWizard() {
 
         if (!customerPhone.trim()) {
           errors.customerPhone = "Phone number is required";
-        } else if (!/^\d{12}$/.test(customerPhone.trim())) {
-          errors.customerPhone = "Phone must be exactly 12 digits including country code";
+        } else if (!/^\d{10}$/.test(customerPhone.trim())) {
+          errors.customerPhone = "Phone must be exactly 10 digits";
         }
 
         if (altPhone.trim() && !/^\d{10}$/.test(altPhone.trim())) {
@@ -237,14 +241,6 @@ export default function OrderWizard() {
         }
         if (altPhone.trim() && altPhone.trim() === customerPhone.trim()) {
           errors.altPhone = "Alternate phone must be different from primary";
-        }
-
-        if (!customerAddress.trim()) {
-          errors.customerAddress = "Address is required";
-        } else if (customerAddress.trim().length < 10) {
-          errors.customerAddress = "Address must be at least 10 characters";
-        } else if (customerAddress.trim().length > 300) {
-          errors.customerAddress = "Address must be less than 300 characters";
         }
 
         if (dob) {
@@ -264,8 +260,11 @@ export default function OrderWizard() {
 
         if (!idNumber.trim()) {
           errors.idNumber = "ID number is required";
-        } else if (idType === "Aadhaar" && !/^\d{12}$/.test(idNumber.trim())) {
-          errors.idNumber = "Aadhaar must be exactly 12 digits";
+        // NEW FEATURE (test-data rule tightening): a valid Aadhaar's first digit is
+        // 2-9 (UIDAI never issues numbers starting 0 or 1). Existing test data that
+        // used a value beginning with 0/1 is now invalid → surfaces as a TEST-DATA issue.
+        } else if (idType === "Aadhaar" && !/^[2-9]\d{11}$/.test(idNumber.trim())) {
+          errors.idNumber = "Aadhaar must be 12 digits and cannot start with 0 or 1";
         } else if (idType === "PAN" && !/^[A-Z]{5}\d{4}[A-Z]$/.test(idNumber.trim().toUpperCase())) {
           errors.idNumber = "PAN format: ABCDE1234F (5 letters, 4 digits, 1 letter)";
         } else if (idType === "Passport" && !/^[A-Z]\d{7}$/.test(idNumber.trim().toUpperCase())) {
@@ -330,6 +329,16 @@ export default function OrderWizard() {
         return true;
 
       case 6:
+        // NEW FEATURE (TCNCT-009): mandatory consent gate.
+        if (!consentGiven) {
+          errors.consent = "You must accept the Terms & Conditions to proceed";
+          setFieldErrors(errors);
+          toast.error("Please accept the Terms & Conditions");
+          return false;
+        }
+        return true;
+
+      case 7:
         return true;
       default:
         return true;
@@ -339,7 +348,7 @@ export default function OrderWizard() {
   function handleNext() {
     if (validateStep(currentStep)) {
       setFieldErrors({});
-      setCurrentStep((prev) => Math.min(prev + 1, 6));
+      setCurrentStep((prev) => Math.min(prev + 1, 7));
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
@@ -360,7 +369,6 @@ export default function OrderWizard() {
           customerName,
           customerEmail,
           customerPhone,
-          customerAddress,
           serviceAreaId: selectedAreaId,
           installAddress,
           planId: selectedPlanId,
@@ -521,7 +529,7 @@ export default function OrderWizard() {
                   id="phone"
                   data-testid="input-phone"
                   type="tel"
-                  placeholder="919876543210"
+                  placeholder="9876543210"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   required
@@ -542,25 +550,6 @@ export default function OrderWizard() {
                 />
                 {fieldErrors.altPhone && <p data-testid="error-altPhone" className="text-xs text-red-500 mt-1">{fieldErrors.altPhone}</p>}
               </div>
-            </div>
-          </div>
-
-          {/* Address */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Address</h3>
-            <div className="space-y-2">
-              <Label htmlFor="address" className="text-sm font-semibold text-gray-700">Residential Address *</Label>
-              <Textarea
-                id="address"
-                data-testid="input-address"
-                placeholder="Enter your full residential address"
-                value={customerAddress}
-                onChange={(e) => setCustomerAddress(e.target.value)}
-                rows={3}
-                required
-                className={`resize-none ${fieldErrors.customerAddress ? "border-red-400 focus:border-red-500 focus:ring-red-200" : "border-gray-200 focus:border-blue-500 focus:ring-blue-500"}`}
-              />
-              {fieldErrors.customerAddress && <p data-testid="error-customerAddress" className="text-xs text-red-500 mt-1">{fieldErrors.customerAddress}</p>}
             </div>
           </div>
 
@@ -1079,8 +1068,50 @@ export default function OrderWizard() {
     );
   }
 
-  // Step 6: Confirmation
+  // Step 6: Consent & Terms (NEW FEATURE TCNCT-009)
   function renderStep6() {
+    return (
+      <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+          <CardTitle className="flex items-center gap-2 text-gray-900">
+            <Shield className="w-5 h-5 text-blue-600" />
+            Consent &amp; Terms
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 space-y-4">
+          <div className="text-sm text-gray-600 border rounded-lg p-4 bg-gray-50 max-h-48 overflow-auto" data-testid="terms-text">
+            <p className="font-medium text-gray-800 mb-2">Terms &amp; Conditions</p>
+            <p>
+              By placing this broadband order you agree to TeleConnect's service terms,
+              acceptable-use policy, and consent to the processing of your personal and
+              KYC data for provisioning, billing, and regulatory compliance. Installation
+              timelines are estimates. Charges apply per the selected plan.
+            </p>
+          </div>
+          <label className="flex items-start gap-3 cursor-pointer" data-testid="consent-label">
+            <input
+              type="checkbox"
+              data-testid="input-consent"
+              checked={consentGiven}
+              onChange={(e) => setConsentGiven(e.target.checked)}
+              className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-800">
+              I have read and accept the Terms &amp; Conditions and consent to data processing.
+            </span>
+          </label>
+          {fieldErrors.consent && (
+            <p data-testid="error-consent" className="text-xs text-red-500 mt-1">
+              {fieldErrors.consent}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Step 7: Confirmation
+  function renderStep7() {
     if (orderSuccess) {
       return (
         <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
@@ -1179,10 +1210,6 @@ export default function OrderWizard() {
               <div>
                 <span className="text-gray-500">ID Number:</span>{" "}
                 <span className="font-medium">{idNumber}</span>
-              </div>
-              <div className="col-span-2">
-                <span className="text-gray-500">Address:</span>{" "}
-                <span className="font-medium">{customerAddress}</span>
               </div>
             </div>
           </div>
@@ -1342,7 +1369,7 @@ export default function OrderWizard() {
           </p>
         </div>
         <Badge variant="outline" className="text-blue-700 border-blue-200 bg-blue-50 px-3 py-1" data-testid="step-badge">
-          Step {currentStep} of 6
+          Step {currentStep} of 7
         </Badge>
       </div>
 
@@ -1357,6 +1384,7 @@ export default function OrderWizard() {
         {currentStep === 4 && renderStep4()}
         {currentStep === 5 && renderStep5()}
         {currentStep === 6 && renderStep6()}
+        {currentStep === 7 && renderStep7()}
       </div>
 
       {/* Navigation Buttons */}
@@ -1373,7 +1401,7 @@ export default function OrderWizard() {
             Back
           </Button>
 
-          {currentStep < 6 && (
+          {currentStep < 7 && (
             <Button
               onClick={handleNext}
               data-testid="btn-next"
