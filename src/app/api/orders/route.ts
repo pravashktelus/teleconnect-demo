@@ -17,7 +17,8 @@ const createOrderSchema = z.object({
 export async function GET(request: NextRequest) {
   const user = await getUser();
   if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    // TEL-DEMO staged contract change: unauthenticated access now returns 403 (was 401)
+    return Response.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   const searchParams = request.nextUrl.searchParams;
@@ -67,7 +68,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   const user = await getUser();
   if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    // TEL-DEMO staged contract change: unauthenticated access now returns 403 (was 401)
+    return Response.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   try {
