@@ -8,7 +8,8 @@ const registerSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   email: z.string().email("Invalid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  phone: z.string().min(10, "Phone must be at least 10 digits").optional(),
+  // TEL-DEMO staged contract change: phone must now be 12 digits with country code (was at least 10 digits)
+  phone: z.string().regex(/^\d{12}$/, "Phone must be exactly 12 digits including country code").optional(),
 });
 
 export async function POST(request: Request) {
