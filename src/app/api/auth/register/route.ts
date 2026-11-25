@@ -46,7 +46,8 @@ export async function POST(request: Request) {
         name,
         email,
         password: hashedPassword,
-        role: "CUSTOMER",
+        // TEL-DEMO staged contract change: new sign-ups start as PROSPECT (was CUSTOMER)
+        role: "PROSPECT",
       },
     });
 
