@@ -30,6 +30,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // TEL-DEMO staged contract change: /api/orders auth is enforced by route.ts (getUser), not here
+  if (pathname === "/api/orders") {
+    return NextResponse.next();
+  }
   // Get token from cookie OR Authorization header (Bearer token)
   const cookieToken = request.cookies.get("token")?.value;
   const authHeader = request.headers.get("authorization");
